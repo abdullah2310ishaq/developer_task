@@ -27,43 +27,57 @@ class RiderInfoCard extends StatelessWidget {
       padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
         color: AppColors.cleanGreen.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(14.r),
         border: Border.all(color: AppColors.cleanGreen.withValues(alpha: 0.3), width: 1.w),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            'Your order is on the way',
-            style: TextStyle(
-              color: AppColors.cleanGreen,
-              fontSize: 15.sp,
-              fontWeight: FontWeight.w700,
+          Container(
+            width: 44.w,
+            height: 44.w,
+            decoration: BoxDecoration(
+              color: AppColors.cleanGreen.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.person_rounded, size: 24.sp, color: AppColors.cleanGreen),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Your rider',
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 12.sp),
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  riderName,
+                  style: TextStyle(
+                    color: AppColors.darkPrimary,
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  riderPhone,
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 13.sp),
+                ),
+              ],
             ),
           ),
-          SizedBox(height: 8.h),
-          Text(
-            riderName,
-            style: TextStyle(color: AppColors.darkPrimary, fontSize: 16.sp, fontWeight: FontWeight.w700),
-          ),
-          SizedBox(height: 4.h),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  riderPhone,
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 14.sp),
-                ),
+          TextButton.icon(
+            onPressed: _callRider,
+            icon: Icon(Icons.phone_rounded, size: 18.sp, color: AppColors.cleanGreen),
+            label: Text(
+              'Call',
+              style: TextStyle(
+                color: AppColors.cleanGreen,
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
               ),
-              TextButton.icon(
-                onPressed: _callRider,
-                icon: Icon(Icons.phone_rounded, size: 18.sp, color: AppColors.cleanGreen),
-                label: Text(
-                  'Call rider',
-                  style: TextStyle(color: AppColors.cleanGreen, fontSize: 13.sp, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
