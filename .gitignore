@@ -45,8 +45,9 @@ app.*.map.json
 /android/app/release
 
 # Secrets — never commit
-.env
 
 # Docs & local Cursor config
 *.md
 .cursor/
+config.bat
+node_modules
