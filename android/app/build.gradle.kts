@@ -50,6 +50,14 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
+            
+            // Fixes the release freeze/crashes by securely shrinking code using the rules file
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }

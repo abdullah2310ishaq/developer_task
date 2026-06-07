@@ -26,13 +26,19 @@ class _OrderTrackScreenState extends State<OrderTrackScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userId = context.read<AuthProvider>().currentUser?.uid;
-      if (userId != null) {
-        context.read<NotificationProvider>().ensureListening(userId, isAdmin: false);
-        context.read<OrderProvider>().trackOrder(widget.orderId, userId);
-      }
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
+  }
+
+  Future<void> _bootstrap() async {
+    final auth = context.read<AuthProvider>();
+    await auth.waitForAuthReady();
+    if (!mounted) return;
+
+    final userId = auth.currentUser?.uid;
+    if (userId == null) return;
+
+    context.read<NotificationProvider>().ensureListening(userId, isAdmin: false);
+    context.read<OrderProvider>().trackOrder(widget.orderId, userId);
   }
 
   Future<void> _confirmReceived() async {

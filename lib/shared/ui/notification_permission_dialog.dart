@@ -2,13 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:developer_task/core/theme/colors.dart';
+import 'package:developer_task/shared/data/services/notification_prompt_storage.dart';
 import 'package:developer_task/shared/data/services/notification_service.dart';
 
 class NotificationPermissionDialog {
+  static final NotificationPromptStorage _promptStorage = NotificationPromptStorage();
+
+  /// First app open — always show once so Android 11 users see the prompt too.
+  static Future<void> showAtAppStart(BuildContext context) async {
+    if (await _promptStorage.wasAsked()) return;
+    if (!context.mounted) return;
+    await _showPrompt(context);
+    await _promptStorage.markAsked();
+  }
+
+  /// Home/login fallback if user skipped at start or notifications still off.
   static Future<void> showIfNeeded(BuildContext context) async {
     final service = NotificationService.instance;
     if (await service.areNotificationsEnabled()) return;
     if (!context.mounted) return;
+    await _showPrompt(context);
+  }
+
+  static Future<void> _showPrompt(BuildContext context) async {
+    final service = NotificationService.instance;
 
     final allow = await showDialog<bool>(
       context: context,
@@ -16,7 +33,7 @@ class NotificationPermissionDialog {
       builder: (ctx) => AlertDialog(
         title: const Text('Order alerts'),
         content: const Text(
-          'Turn on notifications to get pings when orders are placed, accepted, dispatched, or delivered.',
+          'Allow notifications so you get order updates in the app and pings when orders are placed, accepted, dispatched, or delivered.',
         ),
         actions: [
           TextButton(
@@ -44,7 +61,9 @@ class NotificationPermissionDialog {
     }
 
     if (!context.mounted) return;
-    await _showSettingsPrompt(context);
+    if (!await service.areNotificationsEnabled()) {
+      await _showSettingsPrompt(context);
+    }
   }
 
   static Future<void> _showSettingsPrompt(BuildContext context) async {

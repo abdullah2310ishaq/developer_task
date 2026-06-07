@@ -5,6 +5,7 @@ import 'package:developer_task/core/theme/colors.dart';
 import 'package:developer_task/features/auth/providers/auth_provider.dart';
 import 'package:developer_task/features/auth/utils/auth_navigation.dart';
 import 'package:developer_task/shared/ui/app_toast.dart';
+import 'package:developer_task/shared/ui/notification_permission_dialog.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -31,6 +32,9 @@ class _SplashScreenState extends State<SplashScreen> {
     if (auth.errorMessage != null) {
       AppToast.error(context, auth.errorMessage!);
     }
+
+    await NotificationPermissionDialog.showAtAppStart(context);
+    if (!mounted) return;
 
     Navigator.pushReplacementNamed(
       context,

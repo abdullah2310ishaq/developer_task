@@ -1,5 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:developer_task/features/auth/models/app_user.dart';
@@ -8,11 +8,7 @@ import 'package:developer_task/features/auth/services/auth_user_service.dart';
 import 'package:developer_task/features/auth/services/session_token_storage.dart';
 
 class AuthProvider extends ChangeNotifier {
-  AuthProvider(
-    this._authService,
-    this._authUserService,
-    this._sessionStorage,
-  );
+  AuthProvider(this._authService, this._authUserService, this._sessionStorage);
 
   final AuthService _authService;
   final AuthUserService _authUserService;
@@ -36,7 +32,8 @@ class AuthProvider extends ChangeNotifier {
 
   void _notify() {
     final phase = SchedulerBinding.instance.schedulerPhase;
-    if (phase == SchedulerPhase.idle || phase == SchedulerPhase.postFrameCallbacks) {
+    if (phase == SchedulerPhase.idle ||
+        phase == SchedulerPhase.postFrameCallbacks) {
       notifyListeners();
       return;
     }
@@ -109,7 +106,8 @@ class AuthProvider extends ChangeNotifier {
       if (firebaseUser == null || firebaseUser.uid != session.uid) {
         final silent = await _authService.trySilentGoogleSignIn();
         firebaseUser = silent?.user;
-        if (firebaseUser == null || firebaseUser.uid != session.uid) return false;
+        if (firebaseUser == null || firebaseUser.uid != session.uid)
+          return false;
       }
 
       activeSession = session;
@@ -277,8 +275,9 @@ class AuthProvider extends ChangeNotifier {
 
   String _mapAuthError(FirebaseAuthException e) {
     return switch (e.code) {
-      'user-not-found' || 'wrong-password' || 'invalid-credential' =>
-        'Wrong username or password',
+      'user-not-found' ||
+      'wrong-password' ||
+      'invalid-credential' => 'Wrong username or password',
       'invalid-email' => 'Invalid email format',
       _ => e.message ?? 'Login failed',
     };
