@@ -28,8 +28,11 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
     AdminOrdersProvider provider,
     AppOrder order,
   ) async {
-    if (order.status is OrderPending) {
-      final ok = await provider.acceptOrder(order);
+    provider.clearError();
+    final live = provider.orderById(order.id) ?? order;
+
+    if (live.status is OrderPending) {
+      final ok = await provider.acceptOrder(live.id);
       if (!context.mounted) return;
       if (ok) {
         AppToast.success(context, 'Order accepted');
@@ -39,12 +42,12 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
       return;
     }
 
-    if (order.status is OrderPreparing) {
+    if (live.status is OrderPreparing) {
       final rider = await DispatchRiderDialog.show(context);
       if (!context.mounted || rider == null) return;
 
       final ok = await provider.dispatchOrder(
-        order,
+        live.id,
         riderName: rider.name,
         riderPhone: rider.phone,
       );
@@ -128,7 +131,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                   ),
                 )
               : ListView.builder(
-                  padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 24.h),
+                  padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 12.h),
                   itemCount: list.length,
                   itemBuilder: (context, index) {
                     final order = list[index];

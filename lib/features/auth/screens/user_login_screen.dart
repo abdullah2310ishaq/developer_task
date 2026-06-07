@@ -72,6 +72,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
         elevation: 0,
       ),
       body: SafeArea(
+        top: false,
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(

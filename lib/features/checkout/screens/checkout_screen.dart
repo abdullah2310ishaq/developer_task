@@ -122,7 +122,7 @@ class CheckoutScreen extends StatelessWidget {
       body: SafeArea(
         top: false,
         child: ListView(
-          padding: EdgeInsets.all(20.w),
+          padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 28.h),
           children: [
             Text(
               'Deliver to',

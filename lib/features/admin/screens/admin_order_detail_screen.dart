@@ -16,25 +16,34 @@ class AdminOrderDetailScreen extends StatelessWidget {
 
   final AppOrder order;
 
-  Future<void> _handleAction(BuildContext context, AdminOrdersProvider provider) async {
-    if (order.status is OrderPending) {
-      final ok = await provider.acceptOrder(order);
+  Future<void> _handleAction(
+    BuildContext context,
+    AdminOrdersProvider provider,
+    AppOrder live,
+  ) async {
+    provider.clearError();
+
+    if (live.status is OrderPending) {
+      final ok = await provider.acceptOrder(live.id);
       if (!context.mounted) return;
       if (ok) {
         AppToast.success(context, 'Order accepted');
         Navigator.pop(context);
       } else {
-        AppToast.error(context, provider.errorMessage ?? 'Could not accept order');
+        AppToast.error(
+          context,
+          provider.errorMessage ?? 'Could not accept order',
+        );
       }
       return;
     }
 
-    if (order.status is OrderPreparing) {
+    if (live.status is OrderPreparing) {
       final rider = await DispatchRiderDialog.show(context);
       if (!context.mounted || rider == null) return;
 
       final ok = await provider.dispatchOrder(
-        order,
+        live.id,
         riderName: rider.name,
         riderPhone: rider.phone,
       );
@@ -85,7 +94,13 @@ class AdminOrderDetailScreen extends StatelessWidget {
               SizedBox(height: 12.h),
               _InfoBlock(
                 title: 'Placed at',
-                child: Text(time, style: TextStyle(fontSize: 14.sp, color: AppColors.darkPrimary)),
+                child: Text(
+                  time,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: AppColors.darkPrimary,
+                  ),
+                ),
               ),
             ],
             SizedBox(height: 12.h),
@@ -94,11 +109,30 @@ class AdminOrderDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(live.customerName ?? 'Customer', style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600)),
+                  Text(
+                    live.customerName ?? 'Customer',
+                    style: TextStyle(
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   SizedBox(height: 4.h),
-                  Text(live.phone ?? '', style: TextStyle(fontSize: 13.sp, color: AppColors.textMuted)),
+                  Text(
+                    live.phone ?? '',
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
                   SizedBox(height: 4.h),
-                  Text(live.address ?? '', style: TextStyle(fontSize: 13.sp, color: AppColors.textMuted, height: 1.35)),
+                  Text(
+                    live.address ?? '',
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      color: AppColors.textMuted,
+                      height: 1.35,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -119,7 +153,10 @@ class AdminOrderDetailScreen extends StatelessWidget {
                         ),
                         Text(
                           money.format(item.price * item.quantity),
-                          style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
@@ -156,20 +193,35 @@ class AdminOrderDetailScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(live.riderName!, style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600)),
+                    Text(
+                      live.riderName!,
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     SizedBox(height: 4.h),
-                    Text(live.riderPhone ?? '', style: TextStyle(fontSize: 13.sp, color: AppColors.textMuted)),
+                    Text(
+                      live.riderPhone ?? '',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
-            if (live.status is OrderPending || live.status is OrderPreparing) ...[
+            if (live.status is OrderPending ||
+                live.status is OrderPreparing) ...[
               SizedBox(height: 24.h),
               PrimaryButton(
-                label: live.status is OrderPending ? 'Accept order' : 'Dispatch rider',
+                label: live.status is OrderPending
+                    ? 'Accept order'
+                    : 'Dispatch rider',
                 isLoading: provider.isUpdating(live.id),
                 backgroundColor: AppColors.cleanGreen,
-                onPressed: () => _handleAction(context, provider),
+                onPressed: () => _handleAction(context, provider, live),
               ),
             ] else if (live.status is OrderOutForDelivery) ...[
               SizedBox(height: 16.h),
@@ -207,7 +259,11 @@ class _InfoBlock extends StatelessWidget {
         children: [
           Text(
             title,
-            style: TextStyle(color: AppColors.textMuted, fontSize: 12.sp, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           SizedBox(height: 8.h),
           child,

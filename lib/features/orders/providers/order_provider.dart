@@ -1,26 +1,33 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_stripe/flutter_stripe.dart' show StripeException;
 import 'package:developer_task/core/enums/order_tracking_status.dart';
 import 'package:developer_task/core/enums/payment_types.dart';
 import 'package:developer_task/core/models/app_order.dart';
 import 'package:developer_task/features/auth/models/app_user.dart';
 import 'package:developer_task/features/cart/providers/cart_provider.dart';
-import 'package:developer_task/shared/data/services/firestore_notifications_service.dart';
 import 'package:developer_task/shared/data/services/firestore_orders_service.dart';
 import 'package:developer_task/shared/data/services/stripe_service.dart';
+
+typedef TrackedStatusCallback = void Function(
+  AppOrder order,
+  OrderTrackingStatus? previousStatus,
+);
+
+typedef OrderPlacedCallback = void Function(String orderId);
 
 class OrderProvider extends ChangeNotifier {
   OrderProvider(
     this._ordersService,
-    this._stripeService,
-    this._notificationsDb,
-  );
+    this._stripeService, {
+    this.onTrackedStatusChange,
+    this.onOrderPlaced,
+  });
 
   final FirestoreOrdersService _ordersService;
   final StripeService _stripeService;
-  final FirestoreNotificationsService _notificationsDb;
+  final TrackedStatusCallback? onTrackedStatusChange;
+  final OrderPlacedCallback? onOrderPlaced;
 
   List<AppOrder> userOrders = [];
   AppOrder? trackedOrder;
@@ -34,6 +41,7 @@ class OrderProvider extends ChangeNotifier {
   StreamSubscription<List<AppOrder>>? _ordersSub;
   StreamSubscription<AppOrder?>? _trackSub;
   String? _activeUserId;
+  OrderTrackingStatus? _trackedPreviousStatus;
 
   void startUserOrders(String userId) {
     if (_activeUserId == userId && _ordersSub != null) return;
@@ -64,17 +72,40 @@ class OrderProvider extends ChangeNotifier {
     _trackSub?.cancel();
     _trackSub = null;
     trackedOrder = null;
+    _trackedPreviousStatus = null;
     userOrders = [];
     notifyListeners();
   }
 
-  void trackOrder(String orderId, String _) {
-    if (_activeUserId == null) return;
+  void trackOrder(String orderId, String userId) {
+    _activeUserId ??= userId;
     _trackSub?.cancel();
-    _trackSub = _ordersService.watchOrder(orderId).listen((order) {
-      trackedOrder = order;
-      notifyListeners();
-    });
+    _trackedPreviousStatus = null;
+
+    _trackSub = _ordersService.watchOrder(orderId).listen(
+      (order) {
+        if (order == null) {
+          trackedOrder = null;
+          _trackedPreviousStatus = null;
+          notifyListeners();
+          return;
+        }
+
+        final previous = _trackedPreviousStatus;
+        trackedOrder = order;
+
+        if (previous != null && previous.stepIndex != order.status.stepIndex) {
+          onTrackedStatusChange?.call(order, previous);
+        }
+
+        _trackedPreviousStatus = order.status;
+        notifyListeners();
+      },
+      onError: (_) {
+        errorMessage = 'Could not track order';
+        notifyListeners();
+      },
+    );
   }
 
   void selectPaymentMethod(PaymentMethod method) {
@@ -109,6 +140,8 @@ class OrderProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      await _ordersService.validateCartStock(cart.items);
+
       PaymentRecordStatus paymentStatus = const PaymentPending();
 
       if (selectedMethod is PaymentStripe) {
@@ -139,16 +172,10 @@ class OrderProvider extends ChangeNotifier {
         paymentStatus: paymentStatus,
       );
 
-      await _notificationsDb.addNotification(
-        userId: user.uid,
-        title: 'Order placed',
-        body: 'We received your order. Waiting for kitchen to accept.',
-        orderId: orderId,
-      );
-
       cart.clear();
       lastCreatedOrderId = orderId;
       checkoutState = PaymentCheckoutSucceeded(method: selectedMethod);
+      onOrderPlaced?.call(orderId);
       return orderId;
     } on InsufficientStockException catch (e) {
       checkoutState = PaymentCheckoutFailed(
@@ -158,11 +185,9 @@ class OrderProvider extends ChangeNotifier {
       errorMessage = e.toString();
       return null;
     } catch (e) {
-      final message = e is StripeException
-          ? (e.error.localizedMessage ?? 'Payment cancelled')
-          : e.toString().contains('STRIPE') || e.toString().contains('Stripe')
-              ? 'Stripe payment failed'
-              : 'Payment failed';
+      final message = selectedMethod is PaymentStripe
+          ? _stripeService.mapPaymentError(e)
+          : 'Payment failed';
       checkoutState = PaymentCheckoutFailed(
         message: message,
         method: selectedMethod,

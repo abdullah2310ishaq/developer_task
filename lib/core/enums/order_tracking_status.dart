@@ -1,8 +1,8 @@
-// Sealed class jo baqi sab classes ko handle karegi
+
 sealed class OrderTrackingStatus {
   const OrderTrackingStatus();
 
-  // 1. Database value ke liye switch statement
+ 
   String get firestoreValue {
     switch (this) {
       case OrderPending():
@@ -16,7 +16,6 @@ sealed class OrderTrackingStatus {
     }
   }
 
-  // 2. Stepper UI ke liye index number ka switch
   int get stepIndex {
     switch (this) {
       case OrderPending():
@@ -30,7 +29,6 @@ sealed class OrderTrackingStatus {
     }
   }
 
-  // 3. Screen par dikhane ke liye text label ka switch
   String get label {
     switch (this) {
       case OrderPending():
@@ -44,7 +42,6 @@ sealed class OrderTrackingStatus {
     }
   }
 
-  // 4. Firestore ke text ko class object mein badalne ka function
   static OrderTrackingStatus fromFirestore(String? raw) {
     switch (raw) {
       case 'preparing':
@@ -58,7 +55,6 @@ sealed class OrderTrackingStatus {
     }
   }
 
-  // 5. Saare status ki ek timeline list
   static const List<OrderTrackingStatus> timeline = [
     OrderPending(),
     OrderPreparing(),
@@ -66,7 +62,6 @@ sealed class OrderTrackingStatus {
     OrderDelivered(),
   ];
 
-  // 6. Check karne ka function ke status aage nikal gaya ya nahi
   bool isAtOrPast(OrderTrackingStatus other) {
     if (stepIndex >= other.stepIndex) {
       return true;
@@ -76,7 +71,6 @@ sealed class OrderTrackingStatus {
   }
 }
 
-// Choti aur simple sub-classes bina kisi extra boiler plate ke
 class OrderPending extends OrderTrackingStatus {
   const OrderPending();
 }

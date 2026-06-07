@@ -9,6 +9,7 @@ import 'package:developer_task/features/notifications/providers/notification_pro
 import 'package:developer_task/features/orders/providers/order_provider.dart';
 import 'package:developer_task/features/user/widgets/user_home_shell.dart';
 import 'package:developer_task/shared/ui/app_toast.dart';
+import 'package:developer_task/shared/ui/notification_permission_dialog.dart';
 
 class UserHomeScreen extends StatefulWidget {
   const UserHomeScreen({super.key});
@@ -52,15 +53,18 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     final user = auth.currentUser;
     if (user == null) return;
 
-    await context.read<NotificationProvider>().initLocal();
+    await auth.waitForAuthReady();
     if (!mounted) return;
+
+    context.read<NotificationProvider>().startListening(user.uid, isAdmin: false);
+    context.read<OrderProvider>().startUserOrders(user.uid);
 
     final catalog = context.read<CatalogProvider>();
     catalog.addListener(_syncCartWithCatalog);
     catalog.startListening();
-    context.read<OrderProvider>().startUserOrders(user.uid);
-    context.read<NotificationProvider>().startListening(user.uid);
     context.read<SavedItemsProvider>().startListening(user.uid);
+
+    await NotificationPermissionDialog.showIfNeeded(context);
   }
 
   @override
@@ -118,6 +122,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       onExitApp: _exitApp,
       onLogout: _logout,
       onOpenNotifications: () => Navigator.pushNamed(context, AppRoutes.notifications),
+      onOpenProfile: () => Navigator.pushNamed(context, AppRoutes.editProfile),
     );
   }
 }

@@ -58,8 +58,8 @@ class DispatchRiderDialog {
           TextButton(
             onPressed: () {
               final name = nameController.text.trim();
-              final phone = phoneController.text.trim();
-              if (name.isEmpty || phone.length < 11) return;
+              final phone = phoneController.text.trim().replaceAll(RegExp(r'\D'), '');
+              if (name.isEmpty || phone.length < 10) return;
               Navigator.pop(ctx, (name: name, phone: phone));
             },
             child: Text(

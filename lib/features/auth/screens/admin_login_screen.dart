@@ -32,7 +32,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
     _passwordController.text = AdminCredentialsDialog.demoPassword;
     AppToast.success(context, 'Credentials filled');
   }
-
+ 
   Future<void> _handleLogin() async {
     final username = _usernameController.text.trim();
     final password = _passwordController.text;
@@ -73,6 +73,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(backgroundColor: AppColors.background, elevation: 0),
       body: SafeArea(
+        top: false,
         child: SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 24.h),
           child: Column(

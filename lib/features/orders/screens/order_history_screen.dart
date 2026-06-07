@@ -50,7 +50,7 @@ class OrderHistoryScreen extends StatelessWidget {
     }
 
     return ListView.separated(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
       itemCount: orders.userOrders.length,
       separatorBuilder: (_, __) => SizedBox(height: 10.h),
       itemBuilder: (context, index) {

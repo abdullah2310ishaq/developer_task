@@ -82,6 +82,8 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> warmUpGoogleSignIn() => _authService.warmUpGoogleSignIn();
 
+  Future<User?> waitForAuthReady() => _authService.waitForAuthReady();
+
   Future<bool> validateSession() async {
     final session = await _sessionStorage.readSession();
     if (session == null || session.isExpired) {

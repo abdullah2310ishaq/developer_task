@@ -1,7 +1,6 @@
 sealed class PaymentMethod {
   const PaymentMethod();
 
-  // Database value ke liye simple switch
   String get firestoreValue {
     switch (this) {
       case PaymentStripe():
@@ -11,7 +10,6 @@ sealed class PaymentMethod {
     }
   }
 
-  // Screen par dikhane ke liye label text
   String get label {
     switch (this) {
       case PaymentStripe():
@@ -21,7 +19,6 @@ sealed class PaymentMethod {
     }
   }
 
-  // Firestore text se object banane ka function
   static PaymentMethod fromFirestore(String? raw) {
     switch (raw) {
       case 'stripe':
@@ -43,7 +40,6 @@ class PaymentCashOnDelivery extends PaymentMethod {
 sealed class PaymentRecordStatus {
   const PaymentRecordStatus();
 
-  // Database status value ke liye switch
   String get firestoreValue {
     switch (this) {
       case PaymentPaid():
@@ -55,8 +51,7 @@ sealed class PaymentRecordStatus {
     }
   }
 
-  // Firestore text se status object banane ka function
-  static PaymentRecordStatus fromFirestore(String? raw) {
+ static PaymentRecordStatus fromFirestore(String? raw) {
     switch (raw) {
       case 'paid':
         return const PaymentPaid();
@@ -80,31 +75,29 @@ class PaymentFailed extends PaymentRecordStatus {
   const PaymentFailed();
 }
 
-// ==========================================
-// 3. PAYMENT CHECKOUT STATE (Runtime State)
-// ==========================================
+
 sealed class PaymentCheckoutState {
   const PaymentCheckoutState();
 }
 
-// Shuru ki state jab kuch nahi ho raha
+// intial state first
 class PaymentCheckoutIdle extends PaymentCheckoutState {
   const PaymentCheckoutIdle();
 }
 
-// Jab payment process ho rahi ho (Method pass karna lazmi hai)
+//processing one 
 class PaymentCheckoutProcessing extends PaymentCheckoutState {
   final PaymentMethod method;
   const PaymentCheckoutProcessing({required this.method});
 }
 
-// Jab payment successful ho jaye
+// event ok
 class PaymentCheckoutSucceeded extends PaymentCheckoutState {
   final PaymentMethod method;
   const PaymentCheckoutSucceeded({required this.method});
 }
 
-// Jab payment fail ho jaye (Error message ke sath)
+
 class PaymentCheckoutFailed extends PaymentCheckoutState {
   final String message;
   final PaymentMethod? method;

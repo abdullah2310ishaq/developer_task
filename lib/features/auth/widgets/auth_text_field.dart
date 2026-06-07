@@ -9,6 +9,7 @@ class AuthTextField extends StatelessWidget {
     required this.label,
     this.hint,
     this.obscureText = false,
+    this.readOnly = false,
     this.keyboardType,
   });
 
@@ -16,6 +17,7 @@ class AuthTextField extends StatelessWidget {
   final String label;
   final String? hint;
   final bool obscureText;
+  final bool readOnly;
   final TextInputType? keyboardType;
 
   @override
@@ -35,6 +37,7 @@ class AuthTextField extends StatelessWidget {
         TextField(
           controller: controller,
           obscureText: obscureText,
+          readOnly: readOnly,
           keyboardType: keyboardType,
           style: TextStyle(color: AppColors.darkPrimary, fontSize: 15.sp),
           decoration: InputDecoration(

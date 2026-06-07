@@ -36,37 +36,41 @@ class CartScreen extends StatelessWidget {
             itemBuilder: (_, index) => CartLineTile(item: items[index]),
           ),
         ),
-        Container(
-          padding: EdgeInsets.all(20.w),
-          decoration: BoxDecoration(
-            color: AppColors.background,
-            border: Border(top: BorderSide(color: AppColors.lightBorder, width: 1.w)),
-          ),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Subtotal (${AppCurrency.code})',
-                    style: TextStyle(fontSize: 16.sp, color: AppColors.textMuted),
-                  ),
-                  Text(
-                    AppCurrency.format(subtotal),
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.darkPrimary,
+        SafeArea(
+          top: false,
+          minimum: EdgeInsets.only(bottom: 6.h),
+          child: Container(
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              border: Border(top: BorderSide(color: AppColors.lightBorder, width: 1.w)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Subtotal (${AppCurrency.code})',
+                      style: TextStyle(fontSize: 16.sp, color: AppColors.textMuted),
                     ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 14.h),
-              PrimaryButton(
-                label: 'Proceed to checkout',
-                onPressed: () => Navigator.pushNamed(context, AppRoutes.checkout),
-              ),
-            ],
+                    Text(
+                      AppCurrency.format(subtotal),
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.darkPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 14.h),
+                PrimaryButton(
+                  label: 'Proceed to checkout',
+                  onPressed: () => Navigator.pushNamed(context, AppRoutes.checkout),
+                ),
+              ],
+            ),
           ),
         ),
       ],

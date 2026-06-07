@@ -1,58 +1,59 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:developer_task/core/config/env_config.dart';
 import 'package:developer_task/core/constants/firestore_paths.dart';
+import 'package:developer_task/features/auth/models/user_role.dart';
 
 class FirestoreNotificationsService {
+  FirestoreNotificationsService({FirebaseFirestore? firestore})
+      : _firestore = firestore ?? FirebaseFirestore.instance;
+
   final FirebaseFirestore _firestore;
 
-  FirestoreNotificationsService({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
-
-  // Notifications retrun func
-  CollectionReference<Map<String, dynamic>> getNotificationsCollection() {
-    return _firestore.collection(FirestorePaths.notifications);
-  }
+  CollectionReference<Map<String, dynamic>> get _notifications =>
+      _firestore.collection(FirestorePaths.notifications);
 
   Stream<List<Map<String, dynamic>>> watchUserNotifications(String userId) {
-    CollectionReference<Map<String, dynamic>> collection =
-        getNotificationsCollection();
+    return _notifications.where('userId', isEqualTo: userId).snapshots().map(
+      (snapshot) {
+        final list = snapshot.docs.map((doc) {
+          final data = doc.data();
+          data['id'] = doc.id;
+          return data;
+        }).toList();
 
-    // Firestore se data filter karke mangwana
-    return collection.where('userId', isEqualTo: userId).snapshots().map((
-      QuerySnapshot<Map<String, dynamic>> snapshot,
-    ) {
-      List<Map<String, dynamic>> notificationsList = [];
+        list.sort((a, b) {
+          final timeA = a['createdAt'] as Timestamp?;
+          final timeB = b['createdAt'] as Timestamp?;
+          if (timeA == null || timeB == null) return 0;
+          return timeB.compareTo(timeA);
+        });
 
-      //data saving inlist
-      for (var doc in snapshot.docs) {
-        Map<String, dynamic> data = doc.data();
-        data['id'] = doc.id;
-        notificationsList.add(data);
-      }
-
-      notificationsList.sort((a, b) {
-        Timestamp? timeA = a['createdAt'] as Timestamp?;
-        Timestamp? timeB = b['createdAt'] as Timestamp?;
-
-        // Agar kisi ka time missing ho toh sorting skip karna
-        if (timeA == null || timeB == null) {
-          return 0;
-        }
-        return timeB.compareTo(timeA);
-      });
-
-      return notificationsList;
-    });
+        return list;
+      },
+    );
   }
 
-  Future<void> addNotification({
+  Future<List<String>> fetchAdminUserIds() async {
+    try {
+      final snap = await _firestore
+          .collection(FirestorePaths.users)
+          .where('role', isEqualTo: const RoleAdmin().firestoreValue)
+          .get();
+
+      final ids = snap.docs.map((doc) => doc.id).toList();
+      if (ids.isNotEmpty) return ids;
+    } catch (_) {}
+
+    return EnvConfig.adminNotifyUserIds;
+  }
+
+  Future<String> addNotification({
     required String userId,
     required String title,
     required String body,
     String? orderId,
   }) async {
-    final collection = getNotificationsCollection();
-
-    await collection.add({
+    final doc = await _notifications.add({
       'userId': userId,
       'title': title,
       'body': body,
@@ -60,14 +61,15 @@ class FirestoreNotificationsService {
       'read': false,
       'createdAt': FieldValue.serverTimestamp(),
     });
+    return doc.id;
   }
 
   Future<void> setRead(String notificationId, bool read) {
-    return getNotificationsCollection().doc(notificationId).update({'read': read});
+    return _notifications.doc(notificationId).update({'read': read});
   }
 
   Future<void> markAllRead(String userId) async {
-    final snap = await getNotificationsCollection()
+    final snap = await _notifications
         .where('userId', isEqualTo: userId)
         .where('read', isEqualTo: false)
         .get();

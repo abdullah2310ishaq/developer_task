@@ -17,7 +17,7 @@ Future<void> main() async {
   Stripe.publishableKey = EnvConfig.stripePublishableKey;
   await Stripe.instance.applySettings();
 
-  await NotificationService().init();
+  await NotificationService.instance.init();
 
   runApp(const FoodDeliveryApp());
 }

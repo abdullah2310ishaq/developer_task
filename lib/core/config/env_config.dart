@@ -59,6 +59,18 @@ class EnvConfig {
     return dotenv.env['GOOGLE_WEB_CLIENT_ID'];
   }
 
+  /// Optional fallback when Firestore cannot query admin users (rules).
+  /// Comma-separated Firebase Auth UIDs, e.g. ADMIN_NOTIFY_USER_IDS=uid1,uid2
+  static List<String> get adminNotifyUserIds {
+    final raw = dotenv.env['ADMIN_NOTIFY_USER_IDS'];
+    if (raw == null || raw.trim().isEmpty) return [];
+    return raw
+        .split(',')
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
+        .toList();
+  }
+
   static String _required(String key) {
     String? value = dotenv.env[key];
     if (value == null || value.trim().isEmpty) {

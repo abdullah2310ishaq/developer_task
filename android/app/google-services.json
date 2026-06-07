@@ -118,6 +118,14 @@
           }
         },
         {
+          "client_id": "636158664886-vijh76fmsvt93s7qfrsl54iqd0lg1p2a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.task.sourcecode",
+            "certificate_hash": "b4f66ed5953d8d6e201b0dafae76954e29b3ca35"
+          }
+        },
+        {
           "client_id": "636158664886-7s03ivqjvojeagqkk67788spjvtinvdj.apps.googleusercontent.com",
           "client_type": 3
         }

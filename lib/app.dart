@@ -18,6 +18,7 @@ import 'package:developer_task/features/catalog/screens/product_detail_screen.da
 import 'package:developer_task/features/checkout/screens/checkout_screen.dart';
 import 'package:developer_task/features/notifications/screens/notifications_screen.dart';
 import 'package:developer_task/features/orders/screens/order_track_screen.dart';
+import 'package:developer_task/features/user/screens/edit_profile_screen.dart';
 import 'package:developer_task/features/user/screens/user_home_screen.dart';
 
 class FoodDeliveryApp extends StatelessWidget {
@@ -33,7 +34,7 @@ class FoodDeliveryApp extends StatelessWidget {
           child: MaterialApp(
             title: 'Delivery App',
             debugShowCheckedModeBanner: false,
-            theme: AppTheme.build(),
+            theme: AppTheme.lightTheme,
             initialRoute: AppRoutes.splash,
             routes: _routes,
             onGenerateRoute: _onGenerateRoute,
@@ -51,6 +52,7 @@ final Map<String, WidgetBuilder> _routes = {
   AppRoutes.adminLogin: (_) => const AdminLoginScreen(),
   AppRoutes.profileSetup: (_) => const ProfileSetupScreen(),
   AppRoutes.userHome: (_) => const UserHomeScreen(),
+  AppRoutes.editProfile: (_) => const EditProfileScreen(),
   AppRoutes.adminHome: (_) => const AdminHomeScreen(),
   AppRoutes.checkout: (_) => const CheckoutScreen(),
   AppRoutes.notifications: (_) => const NotificationsScreen(),

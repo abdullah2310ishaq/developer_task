@@ -1,22 +1,15 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:developer_task/core/enums/order_tracking_status.dart';
 import 'package:developer_task/core/models/app_order.dart';
-import 'package:developer_task/shared/data/services/firestore_notifications_service.dart';
 import 'package:developer_task/shared/data/services/firestore_orders_service.dart';
-import 'package:developer_task/shared/data/services/notification_service.dart';
 
 class AdminOrdersProvider extends ChangeNotifier {
-  AdminOrdersProvider(
-    this._ordersService,
-    this._notificationService,
-    this._notificationsDb,
-  );
+  AdminOrdersProvider(this._ordersService);
 
   final FirestoreOrdersService _ordersService;
-  final NotificationService _notificationService;
-  final FirestoreNotificationsService _notificationsDb;
 
   List<AppOrder> orders = [];
   List<AppOrder> historyOrders = [];
@@ -26,9 +19,6 @@ class AdminOrdersProvider extends ChangeNotifier {
 
   StreamSubscription<List<AppOrder>>? _subscription;
   String? _activeAdminId;
-  bool _seeded = false;
-  final Set<String> _knownOrderIds = {};
-  final Map<String, OrderTrackingStatus> _lastStatuses = {};
 
   int get pendingCount => orders.where((o) => o.status is OrderPending).length;
   int get preparingCount => orders.where((o) => o.status is OrderPreparing).length;
@@ -41,51 +31,22 @@ class AdminOrdersProvider extends ChangeNotifier {
     return null;
   }
 
+  void clearError() {
+    if (errorMessage == null) return;
+    errorMessage = null;
+    notifyListeners();
+  }
+
   void startListening(String adminUserId) {
     if (_activeAdminId == adminUserId && _subscription != null) return;
 
     stopListening();
     _activeAdminId = adminUserId;
-    _seeded = false;
     isLoading = true;
     notifyListeners();
 
     _subscription = _ordersService.watchAllOrders().listen(
-      (list) async {
-        if (!_seeded) {
-          for (final order in list) {
-            _knownOrderIds.add(order.id);
-            _lastStatuses[order.id] = order.status;
-          }
-          _seeded = true;
-        } else {
-          for (final order in list) {
-            final isNew = !_knownOrderIds.contains(order.id);
-            if (isNew && order.status is OrderPending) {
-              await _notifyAdmin(
-                title: 'New order',
-                body:
-                    '${order.customerName ?? 'Customer'} · ${order.itemCount} items · Rs ${order.total.toStringAsFixed(0)}',
-                orderId: order.id,
-              );
-            }
-
-            final previous = _lastStatuses[order.id];
-            if (previous != null &&
-                order.status is OrderDelivered &&
-                previous is! OrderDelivered) {
-              await _notifyAdmin(
-                title: 'Order received',
-                body: '${order.customerName ?? 'Customer'} confirmed delivery',
-                orderId: order.id,
-              );
-            }
-
-            _knownOrderIds.add(order.id);
-            _lastStatuses[order.id] = order.status;
-          }
-        }
-
+      (list) {
         orders = list.where((o) => o.status is! OrderDelivered).toList();
         historyOrders = list.where((o) => o.status is OrderDelivered).toList();
         isLoading = false;
@@ -102,9 +63,6 @@ class AdminOrdersProvider extends ChangeNotifier {
 
   void stopListening() {
     _activeAdminId = null;
-    _seeded = false;
-    _knownOrderIds.clear();
-    _lastStatuses.clear();
     _subscription?.cancel();
     _subscription = null;
     orders = [];
@@ -112,99 +70,115 @@ class AdminOrdersProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _notifyAdmin({
-    required String title,
-    required String body,
-    required String orderId,
-  }) async {
-    final adminId = _activeAdminId;
-    if (adminId == null) return;
-
-    await _notificationService.showOrderUpdate(
-      id: orderId.hashCode,
-      title: title,
-      body: body,
-    );
-    await _notificationsDb.addNotification(
-      userId: adminId,
-      title: title,
-      body: body,
-      orderId: orderId,
-    );
-  }
-
   bool isUpdating(String orderId) => _updatingIds.contains(orderId);
 
-  Future<bool> acceptOrder(AppOrder order) async {
-    if (order.status is! OrderPending) return false;
-
-    final ok = await _updateStatus(order.id, const OrderPreparing());
-    if (ok) {
-      await _notifyCustomer(
-        order: order,
-        title: 'Order accepted',
-        body: 'Kitchen is preparing your order',
-      );
+  Future<bool> acceptOrder(String orderId) async {
+    final fresh = await _resolveOrder(orderId);
+    if (fresh == null) return false;
+    if (fresh.status is! OrderPending) {
+      errorMessage = 'Order is no longer pending';
+      notifyListeners();
+      return false;
     }
-    return ok;
+    return _updateStatus(orderId, const OrderPreparing());
   }
 
   Future<bool> dispatchOrder(
-    AppOrder order, {
+    String orderId, {
     required String riderName,
     required String riderPhone,
   }) async {
-    if (order.status is! OrderPreparing) return false;
-    if (riderName.trim().isEmpty || riderPhone.trim().length < 11) {
-      errorMessage = 'Enter rider name and 11-digit contact';
+    final name = riderName.trim();
+    final phone = _normalizePhone(riderPhone);
+    if (name.isEmpty || phone.length < 10) {
+      errorMessage = 'Enter rider name and a valid contact number';
       notifyListeners();
       return false;
     }
 
-    _updatingIds.add(order.id);
+    final fresh = await _resolveOrder(orderId);
+    if (fresh == null) return false;
+
+    if (fresh.status is OrderOutForDelivery) {
+      errorMessage = null;
+      notifyListeners();
+      return true;
+    }
+
+    if (fresh.status is! OrderPreparing) {
+      errorMessage = fresh.status is OrderPending
+          ? 'Accept the order before dispatching'
+          : 'This order cannot be dispatched';
+      notifyListeners();
+      return false;
+    }
+
+    _updatingIds.add(orderId);
+    errorMessage = null;
     notifyListeners();
 
     try {
       await _ordersService.dispatchOrder(
-        orderId: order.id,
-        riderName: riderName,
-        riderPhone: riderPhone,
+        orderId: orderId,
+        riderName: name,
+        riderPhone: phone,
       );
-      await _notifyCustomer(
-        order: order,
-        title: 'Order on the way',
-        body: 'Rider $riderName is heading to you · $riderPhone',
-      );
+      errorMessage = null;
       return true;
+    } on FirebaseException catch (e) {
+      errorMessage = e.code == 'permission-denied'
+          ? 'Firestore blocked dispatch — check Firebase rules'
+          : 'Could not dispatch rider (${e.code})';
+      return false;
     } catch (e) {
       errorMessage = 'Could not dispatch rider';
       return false;
     } finally {
-      _updatingIds.remove(order.id);
+      _updatingIds.remove(orderId);
       notifyListeners();
     }
   }
 
-  Future<void> _notifyCustomer({
-    required AppOrder order,
-    required String title,
-    required String body,
-  }) async {
-    await _notificationsDb.addNotification(
-      userId: order.userId,
-      title: title,
-      body: body,
-      orderId: order.id,
-    );
+  Future<AppOrder?> _resolveOrder(String orderId) async {
+    final cached = orderById(orderId);
+    if (cached != null) return cached;
+
+    try {
+      final fresh = await _ordersService.fetchOrder(orderId);
+      if (fresh == null) {
+        errorMessage = 'Order not found';
+        notifyListeners();
+      }
+      return fresh;
+    } catch (_) {
+      errorMessage = 'Could not load order';
+      notifyListeners();
+      return null;
+    }
+  }
+
+  String _normalizePhone(String raw) {
+    final digits = raw.replaceAll(RegExp(r'\D'), '');
+    if (digits.startsWith('92') && digits.length == 12) {
+      return '0${digits.substring(2)}';
+    }
+    return digits;
   }
 
   Future<bool> _updateStatus(String orderId, OrderTrackingStatus status) async {
     _updatingIds.add(orderId);
+    errorMessage = null;
     notifyListeners();
 
     try {
       await _ordersService.updateOrderStatus(orderId, status);
+      errorMessage = null;
       return true;
+    } on FirebaseException catch (e) {
+      errorMessage = e.code == 'permission-denied'
+          ? 'Firestore blocked update — check Firebase rules'
+          : 'Status update failed (${e.code})';
+      return false;
     } catch (e) {
       errorMessage = 'Status update failed';
       return false;

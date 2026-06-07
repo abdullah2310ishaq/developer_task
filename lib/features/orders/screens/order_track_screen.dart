@@ -29,7 +29,7 @@ class _OrderTrackScreenState extends State<OrderTrackScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userId = context.read<AuthProvider>().currentUser?.uid;
       if (userId != null) {
-        context.read<NotificationProvider>().startListening(userId);
+        context.read<NotificationProvider>().ensureListening(userId, isAdmin: false);
         context.read<OrderProvider>().trackOrder(widget.orderId, userId);
       }
     });

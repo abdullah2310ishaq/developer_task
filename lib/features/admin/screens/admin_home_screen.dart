@@ -7,6 +7,7 @@ import 'package:developer_task/features/admin/widgets/admin_home_shell.dart';
 import 'package:developer_task/features/auth/providers/auth_provider.dart';
 import 'package:developer_task/features/notifications/providers/notification_provider.dart';
 import 'package:developer_task/shared/ui/app_toast.dart';
+import 'package:developer_task/shared/ui/notification_permission_dialog.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -43,9 +44,15 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 
     final admin = auth.currentUser;
     if (admin == null) return;
+
+    await auth.waitForAuthReady();
+    if (!mounted) return;
+
+    context.read<NotificationProvider>().startListening(admin.uid, isAdmin: true);
     context.read<AdminProductsProvider>().startListening();
     context.read<AdminOrdersProvider>().startListening(admin.uid);
-    context.read<NotificationProvider>().startListening(admin.uid);
+
+    await NotificationPermissionDialog.showIfNeeded(context);
   }
 
   void _stopAdminListeners() {

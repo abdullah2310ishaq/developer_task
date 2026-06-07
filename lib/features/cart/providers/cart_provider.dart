@@ -14,7 +14,7 @@ class CartProvider extends ChangeNotifier {
 
   bool get hasItems => _items.isNotEmpty;
 
-  /// Returns error message when add fails, null on success.
+  
   String? addProduct(Product product, {int quantity = 1}) {
     if (!product.isInStock) return '${product.name} is out of stock';
 
@@ -39,7 +39,7 @@ class CartProvider extends ChangeNotifier {
     return null;
   }
 
-  /// Returns error message when update fails, null on success.
+ 
   String? updateQuantity(String productId, int quantity, {required int maxStock}) {
     if (!_items.containsKey(productId)) return null;
     if (quantity <= 0) {

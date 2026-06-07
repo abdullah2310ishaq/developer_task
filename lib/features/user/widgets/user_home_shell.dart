@@ -21,6 +21,7 @@ class UserHomeShell extends StatelessWidget {
     required this.onExitApp,
     required this.onLogout,
     required this.onOpenNotifications,
+    required this.onOpenProfile,
   });
 
   final int tabIndex;
@@ -31,8 +32,13 @@ class UserHomeShell extends StatelessWidget {
   final VoidCallback onExitApp;
   final VoidCallback onLogout;
   final VoidCallback onOpenNotifications;
+  final VoidCallback onOpenProfile;
 
   Future<void> _handleMenuAction(BuildContext context, String action) async {
+    if (action == 'profile') {
+      onOpenProfile();
+      return;
+    }
     if (action == 'exit') {
       final choice = await AppSessionDialog.showExitConfirm(
         context,
@@ -110,6 +116,17 @@ class UserHomeShell extends StatelessWidget {
               ),
               onSelected: (value) => _handleMenuAction(context, value),
               itemBuilder: (_) => [
+                PopupMenuItem(
+                  value: 'profile',
+                  child: Row(
+                    children: [
+                      Icon(Icons.person_outline_rounded, size: 20.sp, color: AppColors.darkPrimary),
+                      SizedBox(width: 10.w),
+                      Text('Profile', style: TextStyle(fontSize: 14.sp)),
+                    ],
+                  ),
+                ),
+                PopupMenuDivider(height: 1.h),
                 PopupMenuItem(
                   value: 'exit',
                   child: Text('Exit app', style: TextStyle(fontSize: 14.sp)),

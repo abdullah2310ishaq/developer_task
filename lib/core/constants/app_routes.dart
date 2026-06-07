@@ -6,6 +6,7 @@ class AppRoutes {
   static const userLogin = '/login/user';
   static const adminLogin = '/login/admin';
   static const profileSetup = '/profile/setup';
+  static const editProfile = '/profile/edit';
   static const userHome = '/home/user';
   static const productDetail = '/product/detail';
   static const checkout = '/checkout';

@@ -34,7 +34,8 @@ class UserShellNavBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
-        height: 64.h,
+        padding: EdgeInsets.symmetric(vertical: 8.h),
+        constraints: BoxConstraints(minHeight: 56.h),
         decoration: BoxDecoration(
           color: AppColors.background,
           border: Border(top: BorderSide(color: AppColors.lightBorder, width: 1.w)),
@@ -115,6 +116,7 @@ class _NavItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Badge(

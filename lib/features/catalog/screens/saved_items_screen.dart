@@ -49,7 +49,7 @@ class SavedItemsScreen extends StatelessWidget {
     }
 
     return ListView.separated(
-      padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 16.h),
+      padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 12.h),
       itemCount: products.length,
       separatorBuilder: (_, __) => SizedBox(height: 10.h),
       itemBuilder: (context, index) {

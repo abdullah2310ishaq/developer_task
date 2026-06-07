@@ -35,7 +35,8 @@ class AdminHomeShell extends StatelessWidget {
       final choice = await AppSessionDialog.showExitConfirm(
         context,
         title: 'Exit dashboard?',
-        message: 'You will return to role selection. Your admin session stays signed in.',
+        message:
+            'You will return to role selection. Your admin session stays signed in.',
       );
       if (choice == SessionLeaveAction.exit) onExitDashboard();
       return;
@@ -44,7 +45,8 @@ class AdminHomeShell extends StatelessWidget {
       final confirmed = await AppSessionDialog.showLogoutConfirm(
         context,
         title: 'Logout?',
-        message: 'You will be signed out completely. Login again to access the admin dashboard.',
+        message:
+            'You will be signed out completely. Login again to access the admin dashboard.',
       );
       if (confirmed) onLogout();
     }
@@ -54,7 +56,8 @@ class AdminHomeShell extends StatelessWidget {
     final choice = await AppSessionDialog.showExitConfirm(
       context,
       title: 'Exit dashboard?',
-      message: 'You will return to role selection. Your admin session stays signed in.',
+      message:
+          'You will return to role selection. Your admin session stays signed in.',
     );
     if (choice == SessionLeaveAction.exit) onExitDashboard();
   }
@@ -95,7 +98,11 @@ class AdminHomeShell extends StatelessWidget {
               onPressed: onOpenNotifications,
             ),
             PopupMenuButton<String>(
-              icon: Icon(Icons.more_vert_rounded, size: 24.sp, color: AppColors.darkPrimary),
+              icon: Icon(
+                Icons.more_vert_rounded,
+                size: 24.sp,
+                color: AppColors.darkPrimary,
+              ),
               color: AppColors.background,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6.r),
@@ -105,14 +112,20 @@ class AdminHomeShell extends StatelessWidget {
               itemBuilder: (_) => [
                 PopupMenuItem(
                   value: 'exit',
-                  child: Text('Exit dashboard', style: TextStyle(fontSize: 14.sp)),
+                  child: Text(
+                    'Exit dashboard',
+                    style: TextStyle(fontSize: 14.sp),
+                  ),
                 ),
                 PopupMenuDivider(height: 1.h),
                 PopupMenuItem(
                   value: 'logout',
                   child: Text(
                     'Logout',
-                    style: TextStyle(color: AppColors.errorRed, fontSize: 14.sp),
+                    style: TextStyle(
+                      color: AppColors.errorRed,
+                      fontSize: 14.sp,
+                    ),
                   ),
                 ),
               ],
@@ -120,15 +133,22 @@ class AdminHomeShell extends StatelessWidget {
             SizedBox(width: 8.w),
           ],
         ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         floatingActionButton: tab == AdminShellTab.menu
-            ? FloatingActionButton.extended(
-                backgroundColor: AppColors.brightOrange,
-                foregroundColor: AppColors.background,
-                onPressed: onAddProduct,
-                icon: Icon(Icons.add_rounded, size: 22.sp),
-                label: Text(
-                  'Add item',
-                  style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
+            ? Padding(
+                padding: EdgeInsets.only(bottom: 72.h),
+                child: FloatingActionButton.extended(
+                  backgroundColor: AppColors.brightOrange,
+                  foregroundColor: AppColors.background,
+                  onPressed: onAddProduct,
+                  icon: Icon(Icons.add_rounded, size: 22.sp),
+                  label: Text(
+                    'Add item',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               )
             : null,

@@ -119,7 +119,7 @@ class CatalogScreen extends StatelessWidget {
 
         Expanded(
           child: ListView.separated(
-            padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+            padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 12.h),
             itemCount: catalog.filteredProducts.length,
             separatorBuilder: (_, __) => SizedBox(height: 10.h),
             itemBuilder: (context, index) {

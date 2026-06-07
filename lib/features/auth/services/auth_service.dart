@@ -70,4 +70,19 @@ class AuthService {
     if (user == null) return null;
     return user.getIdToken(forceRefresh);
   }
+
+  Future<User?> waitForAuthReady({
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    final current = _firebaseAuth.currentUser;
+    if (current != null) return current;
+
+    try {
+      return await authStateChanges
+          .firstWhere((user) => user != null)
+          .timeout(timeout);
+    } catch (_) {
+      return _firebaseAuth.currentUser;
+    }
+  }
 }

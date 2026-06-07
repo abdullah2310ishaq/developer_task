@@ -103,10 +103,30 @@ class StripeService {
     await Stripe.instance.initPaymentSheet(
       paymentSheetParameters: SetupPaymentSheetParameters(
         paymentIntentClientSecret: clientSecret,
-        merchantDisplayName: 'Delivery App',
+        merchantDisplayName: 'FreshBite',
       ),
     );
     await Stripe.instance.presentPaymentSheet();
+  }
+
+  String mapPaymentError(Object error) {
+    if (error is StripeException) {
+      return error.error.localizedMessage ?? 'Card payment cancelled';
+    }
+    if (error is DioException) {
+      final data = error.response?.data;
+      if (data is Map) {
+        final stripeErr = data['error'];
+        if (stripeErr is Map && stripeErr['message'] != null) {
+          return stripeErr['message'].toString();
+        }
+      }
+      return error.message ?? 'Network error while contacting Stripe';
+    }
+    if (error is StateError) {
+      return error.message;
+    }
+    return 'Stripe payment failed';
   }
 
   String formatAmount(double amount) => AppCurrency.format(amount);

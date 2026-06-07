@@ -67,6 +67,27 @@ class FirestoreOrdersService {
     });
   }
 
+  Future<AppOrder?> fetchOrder(String orderId) async {
+    final doc = await _orders.doc(orderId).get();
+    if (!doc.exists || doc.data() == null) return null;
+    return AppOrder.fromMap(doc.id, doc.data()!);
+  }
+
+  Future<void> validateCartStock(List<CartItem> items) async {
+    for (final item in items) {
+      final snap = await _products.doc(item.productId).get();
+      if (!snap.exists || snap.data() == null) {
+        throw InsufficientStockException(item.name);
+      }
+      final data = snap.data()!;
+      final isActive = data['isActive'] as bool? ?? true;
+      final stock = (data['stock'] as num?)?.toInt() ?? 0;
+      if (!isActive || stock < item.quantity) {
+        throw InsufficientStockException(item.name, available: stock);
+      }
+    }
+  }
+
   Future<String> createOrder({
     required String userId,
     required String customerName,
